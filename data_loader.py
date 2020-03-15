@@ -15,7 +15,7 @@ def load_masked_image_names():
     return [f for f in glob.glob(__location__ + "/y/*.png") if os.path.isfile(os.path.join(__location__, f))]
 
 def load_mask_data():
-    with open('/Users/carson/Library/Preferences/PyCharm2019.3/scratches/a.json', 'r') as file:
+    with open(str(os.path.join(__location__, '/a.json')), 'r') as file:
         return json.load(file)
 
 def inpaint_image(file_name, mask):
