@@ -4,12 +4,12 @@ import cv2
 import os
 import glob
 import json
-#from skimage import data, img_as_float
-#from skimage.metrics import structural_similarity as ssim
+# from skimage import data, img_as_float
+# from skimage.metrics import structural_similarity as ssim
 # https://stackoverflow.com/questions/4060221/how-to-reliably-open-a-file-in-the-same-directory-as-a-python-script
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-from ece_inpaint import *
+import ece_inpaint
 
 calculated_ssim = []
 calculated_psnr = []
