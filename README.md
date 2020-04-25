@@ -6,7 +6,7 @@ An Inpainting Computer Vision project
 
 Todo
 
-### MacOS Users: X11 if not already installed
+* MacOS Users: X11 if not already installed
 
 ## Running the Algorithm
 
