@@ -26,13 +26,8 @@ def load_mask_data():
         return json.load(file)
 
 
-def inpaint_image(file_name, mask):
-    im = cv2.imread(os.path.join(os.path.join(__location__, "y"), file_name), cv2.IMREAD_COLOR)
-    inpainted_im = inpaint(im, mask)
-    cv2.imwrite('./inpainted/' + file_name + '-inpainted.jpg', inpainted_im)
-
-
 load_masked_image_names()
 mask_data = load_mask_data()
 for image_name in masked_image_names:
-    inpaint_image(image_name, mask_data[image_name])
+    final_image = inpaint(image_name, mask_data[image_name])
+    cv2.imwrite('./inpainted/' + file_name + '-inpainted.jpg', inpainted_im)

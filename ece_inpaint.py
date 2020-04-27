@@ -4,6 +4,8 @@ import json
 import cv2
 import os
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
 
 def inpaint(image_name, mask):
 
@@ -52,6 +54,7 @@ def inpaint(image_name, mask):
 
 def mini_inpaint(file_name, mask_file_name):
     # TODO: run C++ code here
+    im = cv2.imread(os.path.join(os.path.join(__location__, "y"), file_name), cv2.IMREAD_COLOR)
     new_file_name = "mini-inpainted-"+file_name
     return new_file_name
 
