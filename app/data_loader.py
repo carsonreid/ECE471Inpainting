@@ -30,4 +30,4 @@ load_masked_image_names()
 mask_data = load_mask_data()
 for image_name in masked_image_names:
     final_image = inpaint(image_name, mask_data[image_name])
-    cv2.imwrite('./inpainted/' + file_name + '-inpainted.jpg', inpainted_im)
+    cv2.imwrite('./inpainted/' + image_name + '-inpainted.jpg', final_image)
