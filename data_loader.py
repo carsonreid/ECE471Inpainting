@@ -34,5 +34,5 @@ def inpaint_image(file_name, mask):
 
 load_masked_image_names()
 mask_data = load_mask_data()
-for image in masked_image_names:
-    inpaint_image(image, mask_data[image])
+for image_name in masked_image_names:
+    inpaint_image(image_name, mask_data[image_name])
