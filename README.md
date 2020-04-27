@@ -16,5 +16,5 @@ Todo
     `` g++ -o mini_inpaint mini_inpaint.cpp -O2 -lgdi32 ``
 
     MacOS:
-    `` g++ -o mini_inpaint mini_inpaint.cpp -O2 -lm -lpthread -I/usr/X11R6/inclue -L/usr/X11R6/lib -lm -lpthread -lX11 ``
+    `` g++ -o mini_inpaint mini_inpaint.cpp -O2 -lm -lpthread -I/usr/X11R6/include -L/usr/X11R6/lib -lm -lpthread -lX11 ``
 

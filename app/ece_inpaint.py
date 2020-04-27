@@ -3,13 +3,13 @@ import math
 import json
 import cv2
 import os
+import subprocess
 import config
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
 def inpaint(image_name, mask):
-
     # create and save a mask image for the C++ code to use
     mask_im = create_mask_image(mask)
     cv2.imwrite('./mini-inpaint-mask-' + image_name, mask_im)
@@ -50,13 +50,21 @@ def inpaint(image_name, mask):
     # 6. sum inpainted texture image and the structure image
     final_image = np.add(texture, structure)
 
+    # TODO: cleanup temp files
+
     return final_image
 
 
 def mini_inpaint(file_name, mask_file_name):
     # TODO: run C++ code here
-    im = cv2.imread(os.path.join(os.path.join(__location__, "y"), file_name), cv2.IMREAD_COLOR)
     new_file_name = "mini-inpainted-" + file_name
+    process = subprocess.Popen(["./cimg_inpaint/mini_inpaint",
+                                "-i " + file_name + " -m " + mask_file_name + " -o " + new_file_name])  # TODO: check file paths
+    while True:
+        return_code = process.poll()
+        if return_code is not None:
+            break
+
     return new_file_name
 
 
