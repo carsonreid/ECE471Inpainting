@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import config
+import cv2
 iterations = 10
 lambd = 0.1
 mu = 0.1
@@ -11,10 +12,25 @@ def decompose(im):
     u = np.copy(im)
     newu = np.zeros(im.shape)
 
-    g1 = np.ones(im.shape)  # TODO: find out what fx and fy are for intialization
-    newg1 = np.zeros(im.shape)
+    kernX = np.array([[-1, 0, 1],
+                      [-1, 0, 1],
+                      [-1, 0, 1]])
+    kernY = np.array([[-1, -1, -1],
+                        [0, 0, 0],
+                        [1, 1, 1]])
+    fx = cv2.filter2D(im, -1, kernX)
+    fy = cv2.filter2D(im, -1, kernY)
 
-    g2 = np.ones(im.shape) # TODO: find out what fx and fy are for intialization
+    g1 = np.zeros(im.shape)
+    g2 = np.zeros(im.shape)
+    """apply initialization of -1/2lambda * fx/|∇f|"""
+    for i in range(len(im)):
+        for j in range(len(im[0])):
+            for channel in range(3):
+                g1[i][j][channel] = -fx[i][j][channel] / ((H(fx[i][j][channel], fy[i][j][channel])) * 2 * lambd)
+                g2[i][j][channel] = -fy[i][j][channel] / ((H(fx[i][j][channel], fy[i][j][channel])) * 2 * lambd)
+
+    newg1 = np.zeros(im.shape)
     newg2 = np.zeros(im.shape)
 
     for z in range(iterations):
