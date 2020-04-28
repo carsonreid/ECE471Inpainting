@@ -73,7 +73,7 @@ def create_mask_image(mask_data):
 
 
 def structure_texture_decompose(image):
-    return np.array([0]), np.array([1])
+    return decompose(image)
 
 
 def compute_tensors_eigens(image):
