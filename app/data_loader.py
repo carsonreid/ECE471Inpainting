@@ -34,5 +34,5 @@ mask_data = load_mask_data()
 for image_path in image_paths:
     image_file = os.path.basename(image_path)
     image_name, ext = os.path.splitext(image_file)
-    final_image = inpaint(image_name, mask_data[image_name])
+    final_image = inpaint(image_file, mask_data[image_file])
     cv2.imwrite('\\' + config.output_folder + '\\' + image_name + '-inpainted.png', final_image)
