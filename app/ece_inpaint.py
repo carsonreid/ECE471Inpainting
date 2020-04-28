@@ -4,16 +4,17 @@ import json
 import cv2
 import os
 import subprocess
-import decomposition
+from decomposition import decompose
 import config
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
-def inpaint(image_name, mask):
+def inpaint(image_file, masks):
+    image_name, ext = os.path.splitext(image_file)
     # create and save a mask image for the C++ code to use
-    mask_im = create_mask_image(mask)
-    cv2.imwrite('./mini-inpaint-mask-' + image_name, mask_im)
+    mask_im = create_mask_image(image_file, masks)
+    cv2.imwrite('\\' + config.temp_folder + '\\mini-inpaint-mask-' + image_name, mask_im)
 
     # 1. inpaint image using Tshumperle's method
     new_file_name = mini_inpaint(image_name, 'mini-inpaint-mask-' + image_name)
@@ -68,8 +69,17 @@ def mini_inpaint(file_name, mask_file_name):
     return new_file_name
 
 
-def create_mask_image(mask_data):
-    return np.array([0])
+def create_mask_image(image_name, mask_list):
+    print(mask_list)
+    image = cv2.imread(__location__ + "\\" + config.input_folder + "\\" + image_name)
+    mask_im = np.zeros(np.shape(image))
+
+    for mask in mask_list:
+        for y in range(mask[0], mask[0] + mask[2]):
+            for x in range(mask[1], mask[1] + mask[2]):
+                mask_im[y, x] = 1
+
+    return mask_im
 
 
 def structure_texture_decompose(image):
