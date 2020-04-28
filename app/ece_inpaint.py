@@ -6,14 +6,22 @@ import os
 import subprocess
 import decomposition
 import config
+import shutil
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
 def inpaint(image_name, mask):
+
+    # make tmp folder for intermediary images
+    temp_folder_path = os.path.join(__location__, config.temp_folder)
+    if not os.path.exists(temp_folder_path):
+        os.mkdir(temp_folder_path)
+
     # create and save a mask image for the C++ code to use
     mask_im = create_mask_image(mask)
-    cv2.imwrite('./mini-inpaint-mask-' + image_name, mask_im)
+    mini_inpaint_mask_path = os.path.join(__location__, config.temp_folder, "mini-inpaint-mask-"+image_name)
+    cv2.imwrite(mini_inpaint_mask_path, mask_im)
 
     # 1. inpaint image using Tshumperle's method
     new_file_name = mini_inpaint(image_name, 'mini-inpaint-mask-' + image_name)
@@ -51,7 +59,7 @@ def inpaint(image_name, mask):
     # 6. sum inpainted texture image and the structure image
     final_image = np.add(texture, structure)
 
-    # TODO: cleanup temp files
+    shutil.rmtree(temp_folder_path)
 
     return final_image
 
@@ -73,7 +81,7 @@ def create_mask_image(mask_data):
 
 
 def structure_texture_decompose(image):
-    return decompose(image)
+    return decomposition.decompose(image)
 
 
 def compute_tensors_eigens(image):
