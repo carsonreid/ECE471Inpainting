@@ -24,6 +24,5 @@ int main(int argc, char **argv) {
     CImg<int> mask = CImg<int>(mask_file);
     im.inpaint_patch(mask, 5);
     im.save(file_o);
-    std::printf("Yay!\n");
     return 0;
 }

@@ -4,6 +4,7 @@ import json
 import cv2
 import os
 import subprocess
+import decomposition
 import config
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -56,7 +57,6 @@ def inpaint(image_name, mask):
 
 
 def mini_inpaint(file_name, mask_file_name):
-    # TODO: run C++ code here
     new_file_name = "mini-inpainted-" + file_name
     process = subprocess.Popen(["./cimg_inpaint/mini_inpaint",
                                 "-i " + file_name + " -m " + mask_file_name + " -o " + new_file_name])  # TODO: check file paths
@@ -73,7 +73,7 @@ def create_mask_image(mask_data):
 
 
 def structure_texture_decompose(image):
-    return np.array([0]), np.array([1])
+    return decompose(image)
 
 
 def compute_tensors_eigens(image):
