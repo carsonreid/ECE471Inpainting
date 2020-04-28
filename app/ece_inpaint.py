@@ -80,6 +80,10 @@ def mini_inpaint(file_name, mask_file_name):
 
 
 def create_mask_image(image_name, mask_list):
+    """
+    Create a mask image with the shape of the original image and set the values
+    to 1 where the removed part of the image is as provided by the mask_list.
+    """
     image = cv2.imread(os.path.join(__location__, config.input_folder, image_name))
     mask_im = np.zeros(np.shape(image))
 
