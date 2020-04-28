@@ -6,18 +6,28 @@ import os
 import subprocess
 from decomposition import decompose
 import config
+import shutil
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
-def inpaint(image_file, masks):
+def inpaint(image_file, mask):
+    # TODO: Might have to remove all image_name and replace with image_file as
+    # passed in the parameter
     image_name, ext = os.path.splitext(image_file)
+
+    # make tmp folder for intermediary images
+    temp_folder_path = os.path.join(__location__, config.temp_folder)
+    if not os.path.exists(temp_folder_path):
+        os.mkdir(temp_folder_path)
+
     # create and save a mask image for the C++ code to use
-    mask_im = create_mask_image(image_file, masks)
-    cv2.imwrite('\\' + config.temp_folder + '\\mini-inpaint-mask-' + image_name, mask_im)
+    mask_im = create_mask_image(image_file, mask)
+    mini_inpaint_mask_path = os.path.join(__location__, config.temp_folder, "mini-inpaint-mask-" + image_file)
+    cv2.imwrite(mini_inpaint_mask_path, mask_im)
 
     # 1. inpaint image using Tshumperle's method
-    new_file_name = mini_inpaint(image_name, 'mini-inpaint-mask-' + image_name)
+    new_file_name = mini_inpaint(image_name, 'mini-inpaint-mask-' + image_file)
 
     # load mini-inpainted image
     full_image = cv2.imread(new_file_name, cv2.IMREAD_COLOR)
@@ -52,7 +62,7 @@ def inpaint(image_file, masks):
     # 6. sum inpainted texture image and the structure image
     final_image = np.add(texture, structure)
 
-    # TODO: cleanup temp files
+    shutil.rmtree(temp_folder_path)
 
     return final_image
 
@@ -70,8 +80,7 @@ def mini_inpaint(file_name, mask_file_name):
 
 
 def create_mask_image(image_name, mask_list):
-    print(mask_list)
-    image = cv2.imread(__location__ + "\\" + config.input_folder + "\\" + image_name)
+    image = cv2.imread(os.path.join(__location__, config.input_folder, image_name))
     mask_im = np.zeros(np.shape(image))
 
     for mask in mask_list:

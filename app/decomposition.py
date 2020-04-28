@@ -18,7 +18,7 @@ def decompose(im):
     newg2 = np.zeros(im.shape)
 
     for z in range(iterations):
-        if verbose:
+        if config.verbose:
             print("Decomposition iteration "+str(z))
         for channel in range(3):
             # Update u
