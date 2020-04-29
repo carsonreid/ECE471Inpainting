@@ -27,8 +27,8 @@ def decompose(im):
     for i in range(len(im)):
         for j in range(len(im[0])):
             for channel in range(3):
-                g1[i][j][channel] = -fx[i][j][channel] / (np.linalg.norm([fx[i][j][channel], fy[i][j][channel]]) * 2 * lambd)
-                g2[i][j][channel] = -fy[i][j][channel] / (np.linalg.norm([fx[i][j][channel], fy[i][j][channel]]) * 2 * lambd)
+                g1[i][j][channel] = -fx[i][j][channel] / (np.linalg.norm([fx[i][j][channel], fy[i][j][channel]]) * 2 * lambd + 0.1)
+                g2[i][j][channel] = -fy[i][j][channel] / (np.linalg.norm([fx[i][j][channel], fy[i][j][channel]]) * 2 * lambd + 0.1)
 
     newg1 = np.zeros(im.shape)
     newg2 = np.zeros(im.shape)
