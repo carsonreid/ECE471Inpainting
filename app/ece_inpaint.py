@@ -15,7 +15,6 @@ def inpaint(image_file, mask):
     # TODO: Might have to remove all image_name and replace with image_file as
     # passed in the parameter
     image_name, ext = os.path.splitext(image_file)
-
     # make tmp folder for intermediary images
     temp_folder_path = os.path.join(__location__, config.temp_folder)
     if not os.path.exists(temp_folder_path):
@@ -27,11 +26,15 @@ def inpaint(image_file, mask):
     cv2.imwrite(mini_inpaint_mask_path, mask_im)
 
     # 1. inpaint image using Tshumperle's method
-    new_file_name = mini_inpaint(image_name, 'mini-inpaint-mask-' + image_file)
+    new_file_name = os.path.join(__location__, temp_folder_path, "mini-inpainted-" + image_file)
+    mini_inpaint(os.path.join(__location__, "images", image_file),
+                                 os.path.join(__location__, temp_folder_path, 'mini-inpaint-mask-' + image_file),
+                                 new_file_name)
 
     # load mini-inpainted image
     full_image = cv2.imread(new_file_name, cv2.IMREAD_COLOR)
 
+    print(full_image.shape)
     # 2. decompose into structure and texture images
     structure, texture = structure_texture_decompose(full_image)
 
@@ -49,12 +52,18 @@ def inpaint(image_file, mask):
         row = top_priority_index / len(full_image[0])
         col = top_priority_index % len(full_image[0])
 
+        patch_pixels = [(0, 0), (0, 1)]  # TODO: correctly generate a list of pixels in the current patch
+
         # (b) texture or structure?
         lambdaNegative = 0  # some value TODO: find out what the lambdas are
         lambdaPositive = 0  # some value
-        beta = 0  # some value
+        beta = 0  # some value TODO: compute beta
         if lambdaPositive - lambdaNegative < beta:
-            pass  # TODO: apply texture synthesis equation
+            pixel_vals = []
+            for patch_pixel in patch_pixels:
+                # u = structure, v = texture
+
+                pass  # TODO: apply texture synthesis equation
 
         # (c)
         omega = 1 / 1  # TODO: should be omega/pixel, find out what omega is
@@ -67,16 +76,13 @@ def inpaint(image_file, mask):
     return final_image
 
 
-def mini_inpaint(file_name, mask_file_name):
-    new_file_name = "mini-inpainted-" + file_name
+def mini_inpaint(file_name, mask_file_name, new_file_name):
     process = subprocess.Popen(["./cimg_inpaint/mini_inpaint",
-                                "-i " + file_name + " -m " + mask_file_name + " -o " + new_file_name])  # TODO: check file paths
+                                "-i " + file_name, "-m " + mask_file_name, "-o " + new_file_name])  # TODO: check file paths
     while True:
         return_code = process.poll()
         if return_code is not None:
             break
-
-    return new_file_name
 
 
 def create_mask_image(image_name, mask_list):
@@ -90,7 +96,7 @@ def create_mask_image(image_name, mask_list):
     for mask in mask_list:
         for y in range(mask[0], mask[0] + mask[2]):
             for x in range(mask[1], mask[1] + mask[2]):
-                mask_im[y, x] = 1
+                mask_im[y, x] = 255
 
     return mask_im
 
