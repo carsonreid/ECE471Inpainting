@@ -73,15 +73,13 @@ def inpaint(image_file, mask):
     kernY = np.array([[-1, -1, -1],
                       [0, 0, 0],
                       [1, 1, 1]])
-    # edges_x = cv2.filter2D(structure_image, cv2.CV_8U, kernX)
-    # edges_y = cv2.filter2D(structure_image, cv2.CV_8U, kernY)
     fx = cv2.filter2D(structure_image, -1, kernX)
     fy = cv2.filter2D(structure_image, -1, kernY)
 
     gradients = np.stack((fx, fy), axis=-1)
     print(gradients.shape)
 
-    G = np.array([[np.sum([np.dot(channel, channel) for channel in x]) for x in y] for y in gradients])
+    G = np.array([[np.sum([[np.outer(channel, channel)] for channel in x]) for x in y] for y in gradients])
     print(G.shape)
 
     # get the eigenvalues and eigenvectors
