@@ -81,10 +81,9 @@ def inpaint(image_file, mask):
     gradients = np.stack((fx, fy), axis=-1)
     print(gradients.shape)
 
-    G = np.array(np.sum([dI * dI for dI in x]) for x in gradients)
+    G = np.array(np.sum([np.dot(dI, dI) for dI in x]) for x in gradients)
     print(G.shape)
 
-    # get the covariance matrix ?
     # get the eigenvalues and eigenvectors
     eigval, eigvec = np.linalg.eig(G)
 
