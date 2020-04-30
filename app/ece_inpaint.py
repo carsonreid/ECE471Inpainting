@@ -51,43 +51,40 @@ def inpaint(image_file, mask):
 
     # tensors, eigenvalues, eigenvectors = compute_tensors_eigens(structure)
 
-    # 4. compute pixel priorities for all pixels in the mask
-    pixel_priorities = compute_pixel_priorities(structure, texture, mask_im)  # TODO: find what will be needed as params
 
     # 5. inpaint the texture image
     mask_pixel_coordinates = get_mask_pixel_coordinates(mask_im)
-    for mask_x, mask_y in mask_pixel_coordinates:
+    for mask_x, mask_y in mask_pixel_coordinates.copy():  # copying bc the list will be modified while using it
         # (a) find the pixel with top priority that hasn't been inpainted yet
         # ^ SKIP
 
-        # find the best patch to fill from based on SSD
-        ssd_list = []
-        for x in range(len(texture)):
-            for y in range(len(texture[0])):
-                candidate_patch = get_9_patch(x, y, texture)
-                patch_to_fill = get_9_patch(mask_x, mask_y, texture)
-                ssd = ssd_patches(candidate_patch, patch_to_fill)
-                ssd_list.append((ssd, (x, y)))
-        sorted_ssd = min(ssd_list, key=lambda x: x[0])
-        best_patch = sorted_ssd[0]
+        if (mask_x, mask_y) in mask_pixel_coordinates:  # check the pixel hasn't been filled by another patch fill
+            # find the best patch to fill from based on SSD
+            ssd_list = []
+            for x in range(len(texture)):
+                for y in range(len(texture[0])):
+                    candidate_patch = get_9_patch(x, y, texture)
+                    patch_to_fill = get_9_patch(mask_x, mask_y, texture)
+                    ssd = ssd_patches(candidate_patch, patch_to_fill)
+                    ssd_list.append((ssd, (x, y)))
+            sorted_ssd = min(ssd_list, key=lambda item: item[0])
+            best_patch = sorted_ssd[0]
 
+            # (b) texture or structure?
+            lambdaNegative = 0  # some value TODO: find out what the lambdas are
+            lambdaPositive = 0  # some value
+            beta = 0  # some value TODO: compute beta
+            if lambdaPositive - lambdaNegative < beta:
+                pass
 
-        # (b) texture or structure?
-        lambdaNegative = 0  # some value TODO: find out what the lambdas are
-        lambdaPositive = 0  # some value
-        beta = 0  # some value TODO: compute beta
-        if lambdaPositive - lambdaNegative < beta:
-            pass
+            pixels_to_copy = [] # set this to a list of tuples, ((r, g, b), (x, y)),
+                                # should be list of mix of structure+texture pixels
 
-        pixels_to_copy = [] # set this to a list of tuples, ((r, g, b), (x, y)),
-                            # should be list of mix of structure+texture pixels
-
-        for value, coords in pixels_to_copy:
-            if all(channel == 255 for channel in mask_im[coords[1]][coords[0]]):
-                texture[coords[1]][coords[0]] = list(value)
-                mask_im[coords[1]][coords[0]] = np.array([0, 0, 0])
-
-
+            for value, coords in pixels_to_copy:
+                if all(channel == 255 for channel in mask_im[coords[1]][coords[0]]):
+                    texture[coords[1]][coords[0]] = list(value)
+                    mask_im[coords[1]][coords[0]] = np.array([0, 0, 0])
+                    mask_pixel_coordinates.remove((coords[0], coords[1]))  # remove painted pixel from list of px to paint
 
     # 6. sum inpainted texture image and the structure image
     final_image = np.add(texture, structure)
