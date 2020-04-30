@@ -52,6 +52,7 @@ def inpaint(image_file, mask):
     cv2.imwrite(structure_path, structure_image)
 
     # 3. compute tensors, eigenvalues, and eigenvectors of structure image
+    # tensors, eigenvalues, eigenvectors = compute_tensors_eigens(structure)
 
     # add largest negative to all values
     # https://stackoverflow.com/questions/7422204/intensity-normalization-of-image-using-pythonpil-speed-issues#7422584
@@ -77,16 +78,23 @@ def inpaint(image_file, mask):
     fy = cv2.filter2D(structure_image, -1, kernY)
 
     gradients = np.stack((fx, fy), axis=-1)
-    print(gradients.shape)
+    # print(gradients.shape)
 
-    G = np.array([[np.sum([[np.outer(channel, channel)] for channel in x], axis=1) for x in y] for y in gradients])
-    print(G.shape)
+    G = np.array([[np.sum([[np.outer(channel, channel)] for channel in x], axis=0) for x in y] for y in gradients])
+    # print(G.shape)
 
     # get the eigenvalues and eigenvectors
-    eigval, eigvec = np.linalg.eig(G)
+    G_x = np.squeeze(G, axis=2)
+    eigvals = np.zeros((G.shape[0], G.shape[1], 2))
+    eigvecs = np.zeros(G_x.shape)
+    for i, y in enumerate(G):
+        for j, x in enumerate(y):
+            val, vec = np.linalg.eig(x[0])
+            # print(val.shape, vec.shape)
+            eigvals[i][j] = val
+            eigvecs[i][j] = vec
 
-    print(eigval.shape, eigvec.shape)
-    # tensors, eigenvalues, eigenvectors = compute_tensors_eigens(structure)
+    # print(eigvals.shape, eigvecs.shape)
 
     # 4. compute pixel priorities for all pixels in the mask
     # pixel_priorities = compute_pixel_priorities(structure, texture, mask_im)  # TODO: find what will be needed as params
