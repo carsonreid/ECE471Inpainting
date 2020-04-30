@@ -26,23 +26,29 @@ def inpaint(image_file, mask):
     cv2.imwrite(mini_inpaint_mask_path, mask_im)
 
     # 1. inpaint image using Tshumperle's method
-    new_image_path = os.path.join(__location__, temp_folder_path, "mini-inpainted-" + image_file)
-
     # see report for why this is commented out
-    mini_inpaint(os.path.join(__location__, "images", image_file),
-                                os.path.join(__location__, temp_folder_path, 'mini-inpaint-mask-' + image_file),
-                                new_image_path)
+    # new_image_path = os.path.join(__location__, temp_folder_path, "mini-inpainted-" + image_file)
+    # mini_inpaint(os.path.join(__location__, "images", image_file),
+    #                             os.path.join(__location__, temp_folder_path, 'mini-inpaint-mask-' + image_file),
+    #                             new_image_path)
     # see report for thy this is commented out
 
     # load mini-inpainted image
-    full_image = cv2.imread(new_image_path, cv2.IMREAD_COLOR)
+    mini_inpainted_path = os.path.join(__location__, config.mini_inpainted_folder, "mini-inpainted-" + image_file)
+    full_image = cv2.imread(mini_inpainted_path, cv2.IMREAD_COLOR)
 
     print(full_image.shape)
     # 2. decompose into structure and texture images
     structure, texture = structure_texture_decompose(full_image)
 
     # 3. compute tensors, eigenvalues, and eigenvectors of structure image
-    tensors, eigenvalues, eigenvectors = compute_tensors_eigens(structure)
+    # get the gradients x and y
+
+    # get the covariance matrix
+
+    # get the eigenvalues and eigenvectors
+
+    # tensors, eigenvalues, eigenvectors = compute_tensors_eigens(structure)
 
     # 4. compute pixel priorities for all pixels in the mask
     pixel_priorities = compute_pixel_priorities(structure, texture, mask_im)  # TODO: find what will be needed as params
@@ -61,9 +67,12 @@ def inpaint(image_file, mask):
                 patch_to_fill = get_9_patch(mask_x, mask_y, full_image)
                 ssd = ssd_patches(candidate_patch, patch_to_fill)
                 ssd_list.append((ssd, (x, y)))
-        best_patch = min(ssd_list, key=lambda x: x[0])
+        sorted_ssd = min(ssd_list, key=lambda x: x[0])
+        best_patch = sorted_ssd[0]
 
-        # TODO: compute, for each pixel, whether we need to update the value to be from texture/structure im
+        patch_pixels = [(0, 0), (0, 1)]  # TODO: correctly generate a list of pixels in the current patch
+
+        # (b) texture or structure?
         lambdaNegative = 0  # some value TODO: find out what the lambdas are
         lambdaPositive = 0  # some value
         beta = 0  # some value TODO: compute beta
@@ -123,10 +132,10 @@ def compute_pixel_priorities(structure, texture, mask_im):
 def get_9_patch(x, y, image):
     im = cv2.copyMakeBorder(image, 4, 4, 4, 4, cv2.BORDER_CONSTANT, value=0)
     patch = np.zeros((9, 9, 3))
-    for i in range(y-4, y+4, 1):
-        for j in range(x-4, x+4, 1):
+    for i in range(y - 4, y + 4, 1):
+        for j in range(x - 4, x + 4, 1):
             for k in range(3):
-                patch[i][j][k] = im[i+4][j+4][k]
+                patch[i][j][k] = im[i + 4][j + 4][k]
     return patch
 
 
