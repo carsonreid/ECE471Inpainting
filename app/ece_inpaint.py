@@ -29,9 +29,9 @@ def inpaint(image_file, mask):
     new_image_path = os.path.join(__location__, temp_folder_path, "mini-inpainted-" + image_file)
 
     # see report for why this is commented out
-    #mini_inpaint(os.path.join(__location__, "images", image_file),
-    #                             os.path.join(__location__, temp_folder_path, 'mini-inpaint-mask-' + image_file),
-    #                             new_image_path)
+    mini_inpaint(os.path.join(__location__, "images", image_file),
+                                os.path.join(__location__, temp_folder_path, 'mini-inpaint-mask-' + image_file),
+                                new_image_path)
     # see report for thy this is commented out
 
     # load mini-inpainted image
@@ -61,21 +61,16 @@ def inpaint(image_file, mask):
                 patch_to_fill = get_9_patch(mask_x, mask_y, full_image)
                 ssd = ssd_patches(candidate_patch, patch_to_fill)
                 ssd_list.append((ssd, (x, y)))
-        sorted_ssd = min(ssd_list, key=lambda x: x[0])
-        best_patch = sorted_ssd[0]
+        best_patch = min(ssd_list, key=lambda x: x[0])
 
-        patch_pixels = [(0, 0), (0, 1)]  # TODO: correctly generate a list of pixels in the current patch
-
-        # (b) texture or structure?
+        # TODO: compute, for each pixel, whether we need to update the value to be from texture/structure im
         lambdaNegative = 0  # some value TODO: find out what the lambdas are
         lambdaPositive = 0  # some value
         beta = 0  # some value TODO: compute beta
         if lambdaPositive - lambdaNegative < beta:
-            pixel_vals = []
-            for patch_pixel in patch_pixels:
-                # u = structure, v = texture
+            pass
 
-                pass  # TODO: apply texture synthesis equation
+
 
         # (c)
         omega = 1 / 1  # TODO: should be omega/pixel, find out what omega is
