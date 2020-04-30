@@ -26,6 +26,7 @@ def inpaint(image_file, mask):
     cv2.imwrite(mini_inpaint_mask_path, mask_im)
 
     # 1. inpaint image using Tshumperle's method
+
     # see report for why this is commented out
     # new_image_path = os.path.join(__location__, temp_folder_path, "mini-inpainted-" + image_file)
     # mini_inpaint(os.path.join(__location__, "images", image_file),
@@ -61,16 +62,15 @@ def inpaint(image_file, mask):
 
         # find the best patch to fill from based on SSD
         ssd_list = []
-        for x in range(len(full_image)):
-            for y in range(len(full_image[0])):
-                candidate_patch = get_9_patch(x, y, full_image)
-                patch_to_fill = get_9_patch(mask_x, mask_y, full_image)
+        for x in range(len(texture)):
+            for y in range(len(texture[0])):
+                candidate_patch = get_9_patch(x, y, texture)
+                patch_to_fill = get_9_patch(mask_x, mask_y, texture)
                 ssd = ssd_patches(candidate_patch, patch_to_fill)
                 ssd_list.append((ssd, (x, y)))
         sorted_ssd = min(ssd_list, key=lambda x: x[0])
         best_patch = sorted_ssd[0]
 
-        patch_pixels = [(0, 0), (0, 1)]  # TODO: correctly generate a list of pixels in the current patch
 
         # (b) texture or structure?
         lambdaNegative = 0  # some value TODO: find out what the lambdas are
@@ -79,10 +79,15 @@ def inpaint(image_file, mask):
         if lambdaPositive - lambdaNegative < beta:
             pass
 
+        pixels_to_copy = [] # set this to a list of tuples, ((r, g, b), (x, y)),
+                            # should be list of mix of structure+texture pixels
+
+        for value, coords in pixels_to_copy:
+            if all(channel == 255 for channel in mask_im[coords[1]][coords[0]]):
+                texture[coords[1]][coords[0]] = list(value)
+                mask_im[coords[1]][coords[0]] = np.array([0, 0, 0])
 
 
-        # (c)
-        omega = 1 / 1  # TODO: should be omega/pixel, find out what omega is
 
     # 6. sum inpainted texture image and the structure image
     final_image = np.add(texture, structure)
