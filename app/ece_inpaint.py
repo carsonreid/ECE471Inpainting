@@ -63,7 +63,8 @@ def inpaint(image_file, mask):
             structure_image[..., i] *= (255.0 / (maxval - minval))
 
     # convert structure image to grayscale
-    gray_structure_image = cv2.cvtColor(structure_image, cv2.COLOR_BGR2GRAY)
+    # structure_image = structure_image.astype("uint8")
+    # gray_structure_image = cv2.cvtColor(structure_image, cv2.COLOR_BGR2GRAY)
 
     # get the gradients x and y
     kernX = np.array([[-1, 0, 1],
@@ -74,14 +75,18 @@ def inpaint(image_file, mask):
                       [1, 1, 1]])
     # edges_x = cv2.filter2D(structure_image, cv2.CV_8U, kernX)
     # edges_y = cv2.filter2D(structure_image, cv2.CV_8U, kernY)
-    fx = cv2.filter2D(gray_structure_image, -1, kernX)
-    fy = cv2.filter2D(gray_structure_image, -1, kernY)
+    fx = cv2.filter2D(structure_image, -1, kernX)
+    fy = cv2.filter2D(structure_image, -1, kernY)
 
     gradients = np.stack((fx, fy), axis=-1)
+    print(gradients.shape)
+
+    G = np.array(np.sum([dI * dI for dI in x]) for x in gradients)
+    print(G.shape)
 
     # get the covariance matrix ?
     # get the eigenvalues and eigenvectors
-    eigval, eigvec = np.linalg.eig(gradients)
+    eigval, eigvec = np.linalg.eig(G)
 
     print(eigval.shape, eigvec.shape)
     # tensors, eigenvalues, eigenvectors = compute_tensors_eigens(structure)
@@ -98,10 +103,10 @@ def inpaint(image_file, mask):
         if (mask_x, mask_y) in mask_pixel_coordinates:  # check the pixel hasn't been filled by another patch fill
             # find the best patch to fill from based on SSD
             ssd_list = []
-            for x in range(len(texture)):
-                for y in range(len(texture[0])):
-                    candidate_patch = get_9_patch(x, y, texture)
-                    patch_to_fill = get_9_patch(mask_x, mask_y, texture)
+            for x in range(len(texture_image)):
+                for y in range(len(texture_image[0])):
+                    candidate_patch = get_9_patch(x, y, texture_image)
+                    patch_to_fill = get_9_patch(mask_x, mask_y, texture_image)
                     ssd = ssd_patches(candidate_patch, patch_to_fill)
                     ssd_list.append((ssd, (x, y)))
             sorted_ssd = min(ssd_list, key=lambda item: item[0])
@@ -119,12 +124,12 @@ def inpaint(image_file, mask):
 
             for value, coords in pixels_to_copy:
                 if all(channel == 255 for channel in mask_im[coords[1]][coords[0]]):
-                    texture[coords[1]][coords[0]] = list(value)
+                    texture_image[coords[1]][coords[0]] = list(value)
                     mask_im[coords[1]][coords[0]] = np.array([0, 0, 0])
                     mask_pixel_coordinates.remove((coords[0], coords[1]))  # remove painted pixel from list of px to paint
 
     # 6. sum inpainted texture image and the structure image
-    final_image = np.add(texture, structure)
+    final_image = np.add(texture_image, structure_image)
 
     shutil.rmtree(temp_folder_path)
 
