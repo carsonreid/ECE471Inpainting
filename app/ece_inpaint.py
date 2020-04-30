@@ -7,6 +7,8 @@ import subprocess
 from decomposition import decompose
 import config
 import shutil
+from sklearn.preprocessing import normalize
+
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -34,31 +36,63 @@ def inpaint(image_file, mask):
     # see report for thy this is commented out
 
     # load mini-inpainted image
+    # mini_inpainted_path = os.path.join(__location__,
+    # config.mini_inpainted_folder, "mini-inpainted-" + image_file)
     mini_inpainted_path = os.path.join(__location__, config.mini_inpainted_folder, "mini-inpainted-" + image_file)
+    print(mini_inpainted_path)
     full_image = cv2.imread(mini_inpainted_path, cv2.IMREAD_COLOR)
 
     print(full_image.shape)
     # 2. decompose into structure and texture images
-    structure, texture = structure_texture_decompose(full_image)
+    structure_image, texture_image = structure_texture_decompose(full_image)
+
+    structure_path = os.path.join(__location__, config.temp_folder, "struct-" + image_file)
+    # structure_image = cv2.imread(structure_path, cv2.IMREAD_COLOR)
+    cv2.imwrite(structure_path, structure_image)
 
     # 3. compute tensors, eigenvalues, and eigenvectors of structure image
+
+    # add largest negative to all values
+    # https://stackoverflow.com/questions/7422204/intensity-normalization-of-image-using-pythonpil-speed-issues#7422584
+    for i in range(3):
+        minval = structure_image[..., i].min()
+        maxval = structure_image[..., i].max()
+        if minval != maxval:
+            structure_image[..., i] -= minval
+            structure_image[..., i] *= (255.0 / (maxval - minval))
+
+    # convert structure image to grayscale
+    gray_structure_image = cv2.cvtColor(structure_image, cv2.COLOR_BGR2GRAY)
+
     # get the gradients x and y
+    kernX = np.array([[-1, 0, 1],
+                      [-1, 0, 1],
+                      [-1, 0, 1]])
+    kernY = np.array([[-1, -1, -1],
+                      [0, 0, 0],
+                      [1, 1, 1]])
+    # edges_x = cv2.filter2D(structure_image, cv2.CV_8U, kernX)
+    # edges_y = cv2.filter2D(structure_image, cv2.CV_8U, kernY)
+    fx = cv2.filter2D(gray_structure_image, -1, kernX)
+    fy = cv2.filter2D(gray_structure_image, -1, kernY)
 
-    # get the covariance matrix
+    gradients = np.stack((fx, fy), axis=-1)
 
+    # get the covariance matrix ?
     # get the eigenvalues and eigenvectors
+    eigval, eigvec = np.linalg.eig(gradients)
 
+    print(eigval.shape, eigvec.shape)
     # tensors, eigenvalues, eigenvectors = compute_tensors_eigens(structure)
 
     # 4. compute pixel priorities for all pixels in the mask
-    pixel_priorities = compute_pixel_priorities(structure, texture, mask_im)  # TODO: find what will be needed as params
+    # pixel_priorities = compute_pixel_priorities(structure, texture, mask_im)  # TODO: find what will be needed as params
 
     # 5. inpaint the texture image
     mask_pixel_coordinates = get_mask_pixel_coordinates(mask_im)
     for mask_x, mask_y in mask_pixel_coordinates:
         # (a) find the pixel with top priority that hasn't been inpainted yet
         # ^ SKIP
-
         # find the best patch to fill from based on SSD
         ssd_list = []
         for x in range(len(full_image)):
