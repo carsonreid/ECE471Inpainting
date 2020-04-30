@@ -81,7 +81,7 @@ def inpaint(image_file, mask):
     gradients = np.stack((fx, fy), axis=-1)
     print(gradients.shape)
 
-    G = np.array([np.sum([np.dot(channel, channel) for channel in x]) for x in y] for y in gradients)
+    G = np.array([[np.sum([np.dot(channel, channel) for channel in x]) for x in y] for y in gradients])
     print(G.shape)
 
     # get the eigenvalues and eigenvectors
