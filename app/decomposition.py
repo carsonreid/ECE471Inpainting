@@ -2,7 +2,7 @@ import numpy as np
 import math
 import config
 import cv2
-iterations = 10
+iterations = 1
 lambd = 0.1
 mu = 0.1
 
