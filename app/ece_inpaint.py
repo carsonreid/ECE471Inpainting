@@ -189,7 +189,8 @@ def get_9_patch(x, y, image):
     for i in range(y - 4, y + 4, 1):
         for j in range(x - 4, x + 4, 1):
             for k in range(3):
-                patch[i][j][k] = im[i + 4][j + 4][k]
+                val = im[i + 4][j + 4][k]
+                patch[i][j][k] = val
     return patch
 
 
