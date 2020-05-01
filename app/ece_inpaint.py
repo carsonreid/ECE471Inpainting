@@ -85,12 +85,14 @@ def inpaint(image_file, mask):
             # (b) texture or structure?
             pixels_to_copy = []  # set this to a list of tuples, ((r, g, b), (x, y)),
             for pixel in source_patch_pixels.reshape((9 * 9, 3)):
-                pixel_coords = pixel[0][1]
-                lambdaNegative = eigvals[pixel_coords[1]][pixel_coords[0]][0]
-                lambdaPositive = eigvals[pixel_coords[1]][pixel_coords[0]][1]
-                if lambdaPositive - lambdaNegative < beta:
-                    pixels_to_copy.append((pixel, pixel_coords))
-
+                try:
+                    pixel_coords = pixel[0][1]
+                    lambdaNegative = eigvals[pixel_coords[1]][pixel_coords[0]][0]
+                    lambdaPositive = eigvals[pixel_coords[1]][pixel_coords[0]][1]
+                    if lambdaPositive - lambdaNegative < beta:
+                        pixels_to_copy.append((pixel, pixel_coords))
+                except TypeError:
+                    pass
             for value, coords in pixels_to_copy:
                 if all(channel == 255 for channel in mask_im[coords[1]][coords[0]]):
                     texture_image[coords[1]][coords[0]] = list(value)
