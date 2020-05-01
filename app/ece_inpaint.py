@@ -52,54 +52,16 @@ def inpaint(image_file, mask):
     cv2.imwrite(structure_path, structure_image)
 
     # 3. compute tensors, eigenvalues, and eigenvectors of structure image
-    # tensors, eigenvalues, eigenvectors = compute_tensors_eigens(structure)
-
-    # add largest negative to all values
-    # https://stackoverflow.com/questions/7422204/intensity-normalization-of-image-using-pythonpil-speed-issues#7422584
-    for i in range(3):
-        minval = structure_image[..., i].min()
-        maxval = structure_image[..., i].max()
-        if minval != maxval:
-            structure_image[..., i] -= minval
-            structure_image[..., i] *= (255.0 / (maxval - minval))
-
-    # convert structure image to grayscale
-    # structure_image = structure_image.astype("uint8")
-    # gray_structure_image = cv2.cvtColor(structure_image, cv2.COLOR_BGR2GRAY)
-
-    # get the gradients x and y
-    kernX = np.array([[-1, 0, 1],
-                      [-1, 0, 1],
-                      [-1, 0, 1]])
-    kernY = np.array([[-1, -1, -1],
-                      [0, 0, 0],
-                      [1, 1, 1]])
-    fx = cv2.filter2D(structure_image, -1, kernX)
-    fy = cv2.filter2D(structure_image, -1, kernY)
-
-    gradients = np.stack((fx, fy), axis=-1)
-    # print(gradients.shape)
-
-    G = np.array([[np.sum([[np.outer(channel, channel)] for channel in x], axis=0) for x in y] for y in gradients])
-    # print(G.shape)
-
-    # get the eigenvalues and eigenvectors
-    G_x = np.squeeze(G, axis=2)
-    eigvals = np.zeros((G.shape[0], G.shape[1], 2))
-    eigvecs = np.zeros(G_x.shape)
-    for i, y in enumerate(G):
-        for j, x in enumerate(y):
-            val, vec = np.linalg.eig(x[0])
-            # print(val.shape, vec.shape)
-            eigvals[i][j] = val
-            eigvecs[i][j] = vec
-
-    # print(eigvals.shape, eigvecs.shape)
+    eigvals, eigvecs = compute_tensors_eigens(structure_image)
 
     # 4. compute pixel priorities for all pixels in the mask
     # pixel_priorities = compute_pixel_priorities(structure, texture, mask_im)  # TODO: find what will be needed as params
 
     # 5. inpaint the texture image
+    # calculate beta
+    lambda_differences = np.array([[[x[1] - x[0]] for x in y]for y in eigvals])
+    beta = np.sum(lambda_differences) / (eigvals.shape[0] * eigvals.shape[1])
+
     mask_pixel_coordinates = get_mask_pixel_coordinates(mask_im)
     for mask_x, mask_y in mask_pixel_coordinates.copy():  # copying bc the list will be modified while using it
         # (a) find the pixel with top priority that hasn't been inpainted yet
@@ -118,10 +80,10 @@ def inpaint(image_file, mask):
             best_patch = sorted_ssd[0]
 
             # (b) texture or structure?
-            lambdaNegative = 0  # some value TODO: find out what the lambdas are
-            lambdaPositive = 0  # some value
-            beta = 0  # some value TODO: compute beta
+            lambdaNegative = eigvals[mask_y][mask_x][0]
+            lambdaPositive = eigvals[mask_y][mask_x][1]
             if lambdaPositive - lambdaNegative < beta:
+                # TODO: do something here
                 pass
 
             pixels_to_copy = []  # set this to a list of tuples, ((r, g, b), (x, y)),
@@ -170,8 +132,49 @@ def structure_texture_decompose(image):
     return decompose(image)
 
 
-def compute_tensors_eigens(image):
-    return np.array([0]), np.array([1]), np.array([2])
+def compute_tensors_eigens(structure_image):
+    # add largest negative to all values
+    # https://stackoverflow.com/questions/7422204/intensity-normalization-of-image-using-pythonpil-speed-issues#7422584
+    for i in range(3):
+        minval = structure_image[..., i].min()
+        maxval = structure_image[..., i].max()
+        if minval != maxval:
+            structure_image[..., i] -= minval
+            structure_image[..., i] *= (255.0 / (maxval - minval))
+
+    # convert structure image to grayscale
+    # structure_image = structure_image.astype("uint8")
+    # gray_structure_image = cv2.cvtColor(structure_image, cv2.COLOR_BGR2GRAY)
+
+    # get the gradients x and y
+    kernX = np.array([[-1, 0, 1],
+                      [-1, 0, 1],
+                      [-1, 0, 1]])
+    kernY = np.array([[-1, -1, -1],
+                      [0, 0, 0],
+                      [1, 1, 1]])
+    fx = cv2.filter2D(structure_image, -1, kernX)
+    fy = cv2.filter2D(structure_image, -1, kernY)
+
+    gradients = np.stack((fx, fy), axis=-1)
+    # print(gradients.shape)
+
+    G = np.array([[np.sum([[np.outer(channel, channel)] for channel in x], axis=0) for x in y] for y in gradients])
+    # print(G.shape)
+
+    # get the eigenvalues and eigenvectors
+    G_x = np.squeeze(G, axis=2)
+    eigvals = np.zeros((G.shape[0], G.shape[1], 2))
+    eigvecs = np.zeros(G_x.shape)
+    for i, y in enumerate(G):
+        for j, x in enumerate(y):
+            val, vec = np.linalg.eig(x[0])
+            # print(val.shape, vec.shape)
+            eigvals[i][j] = val
+            eigvecs[i][j] = vec
+
+    # print(eigvals.shape, eigvecs.shape)
+    return eigvals, eigvecs
 
 
 def compute_pixel_priorities(structure, texture, mask_im):
