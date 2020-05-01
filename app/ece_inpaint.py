@@ -95,7 +95,8 @@ def inpaint(image_file, mask):
                     pass
             for value, coords in pixels_to_copy:
                 if all(channel == 255 for channel in mask_im[coords[1]][coords[0]]):
-                    texture_image[coords[1]][coords[0]] = list(value)
+                    for ch in range(3):
+                        texture_image[coords[1]][coords[0]][ch] = value[ch]
                     mask_im[coords[1]][coords[0]] = np.array([0, 0, 0])
                     mask_pixel_coordinates.remove((coords[0], coords[1]))  # remove painted pixel from list of px to paint
 
