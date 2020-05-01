@@ -63,7 +63,8 @@ def inpaint(image_file, mask):
     beta = np.sum(lambda_differences) / (eigvals.shape[0] * eigvals.shape[1])
 
     mask_pixel_coordinates = get_mask_pixel_coordinates(mask_im)
-    for mask_x, mask_y in mask_pixel_coordinates.copy():  # copying bc the list will be modified while using it
+    mask_px_coords = mask_pixel_coordinates.copy()  # copying bc the list will be modified while using it
+    for mask_x, mask_y in mask_px_coords:
         # (a) find the pixel with top priority that hasn't been inpainted yet
         # ^ SKIP
 
@@ -76,18 +77,19 @@ def inpaint(image_file, mask):
                     patch_to_fill = get_9_patch(mask_x, mask_y, texture_image)
                     ssd = ssd_patches(candidate_patch, patch_to_fill)
                     ssd_list.append((ssd, (x, y)))
-            sorted_ssd = min(ssd_list, key=lambda item: item[0])
+            sorted_ssd = sorted(ssd_list, key=lambda item: item[0])
+            ssd_list.pop(0)  # pop the first one, since it will have found a 0 SSD comparing a patch to itself
             best_patch = sorted_ssd[0]
+            source_patch_pixels = get_9_patch_coords(best_patch[1][0], best_patch[1][1], full_image)
 
             # (b) texture or structure?
-            lambdaNegative = eigvals[mask_y][mask_x][0]
-            lambdaPositive = eigvals[mask_y][mask_x][1]
-            if lambdaPositive - lambdaNegative < beta:
-                # TODO: do something here
-                pass
-
             pixels_to_copy = []  # set this to a list of tuples, ((r, g, b), (x, y)),
-            # should be list of mix of structure+texture pixels
+            for pixel in source_patch_pixels.reshape((9*9, 3)):
+                pixel_coords = pixel[0][1]
+                lambdaNegative = eigvals[pixel_coords[1]][pixel_coords[0]][0]
+                lambdaPositive = eigvals[pixel_coords[1]][pixel_coords[0]][1]
+                if lambdaPositive - lambdaNegative < beta:
+                    pixels_to_copy.append((pixel, pixel_coords))
 
             for value, coords in pixels_to_copy:
                 if all(channel == 255 for channel in mask_im[coords[1]][coords[0]]):
@@ -188,6 +190,16 @@ def get_9_patch(x, y, image):
         for j in range(x - 4, x + 4, 1):
             for k in range(3):
                 patch[i][j][k] = im[i + 4][j + 4][k]
+    return patch
+
+
+def get_9_patch_coords(x, y, image):
+    im = cv2.copyMakeBorder(image, 4, 4, 4, 4, cv2.BORDER_CONSTANT, value=0)
+    patch = np.zeros((9, 9, 3))
+    for i in range(y - 4, y + 4, 1):
+        for j in range(x - 4, x + 4, 1):
+            for k in range(3):
+                patch[i][j][k] = (im[i + 4][j + 4][k], (j, i))
     return patch
 
 
