@@ -214,6 +214,6 @@ def get_mask_pixel_coordinates(image):
     coords = []
     for i in range(len(image)):
         for j in range(len(image[0])):
-            if image[i][j] != 0:
+            if all(channel != 0 for channel in image[i][j]):
                 coords.append((j, i))
     return coords
