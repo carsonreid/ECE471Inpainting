@@ -197,7 +197,7 @@ def get_9_patch(x, y, image):
 
 def get_9_patch_coords(x, y, image):
     im = cv2.copyMakeBorder(image, 4, 4, 4, 4, cv2.BORDER_CONSTANT, value=0)
-    patch = np.zeros((9, 9, 3))
+    patch = np.zeros((9, 9, 3), dtype=object)
     idx = 0
     for i in range(y - 4, y + 4, 1):
         for j in range(x - 4, x + 4, 1):
