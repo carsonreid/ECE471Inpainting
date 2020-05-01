@@ -96,12 +96,19 @@ def inpaint(image_file, mask):
             for value, coords in pixels_to_copy:
                 if all(channel == 255 for channel in mask_im[coords[1]][coords[0]]):
                     for ch in range(3):
-                        texture_image[coords[1]][coords[0]][ch] = value[ch]
+                        texture_image[coords[1]][coords[0]][ch] = value[ch][0]
                     mask_im[coords[1]][coords[0]] = np.array([0, 0, 0])
                     mask_pixel_coordinates.remove((coords[0], coords[1]))  # remove painted pixel from list of px to paint
 
     # 6. sum inpainted texture image and the structure image
     final_image = np.add(texture_image, structure_image)
+
+    for i in range(3):
+        minval = final_image[..., i].min()
+        maxval = final_image[..., i].max()
+        if minval != maxval:
+            final_image[..., i] -= minval
+            final_image[..., i] *= (255.0 / (maxval - minval))
 
     shutil.rmtree(temp_folder_path)
 
