@@ -71,8 +71,8 @@ def inpaint(image_file, mask):
         if (mask_x, mask_y) in mask_pixel_coordinates:  # check the pixel hasn't been filled by another patch fill
             # find the best patch to fill from based on SSD
             ssd_list = []
-            for x in range(len(texture_image)):
-                for y in range(len(texture_image[0])):
+            for y in range(len(texture_image)):
+                for x in range(len(texture_image[0])):
                     candidate_patch = get_9_patch(x, y, texture_image)
                     patch_to_fill = get_9_patch(mask_x, mask_y, texture_image)
                     ssd = ssd_patches(candidate_patch, patch_to_fill)
@@ -84,7 +84,7 @@ def inpaint(image_file, mask):
 
             # (b) texture or structure?
             pixels_to_copy = []  # set this to a list of tuples, ((r, g, b), (x, y)),
-            for pixel in source_patch_pixels.reshape((9*9, 3)):
+            for pixel in source_patch_pixels.reshape((9 * 9, 3)):
                 pixel_coords = pixel[0][1]
                 lambdaNegative = eigvals[pixel_coords[1]][pixel_coords[0]][0]
                 lambdaPositive = eigvals[pixel_coords[1]][pixel_coords[0]][1]
@@ -190,7 +190,7 @@ def get_9_patch(x, y, image):
     for i in range(y - 4, y + 4, 1):
         for j in range(x - 4, x + 4, 1):
             for k in range(3):
-                patch[idx/9][idx % 9][k] = im[i + 4][j + 4][k]
+                patch[idx // 9][idx % 9][k] = im[i + 4][j + 4][k]
             idx += 1
     return patch
 
@@ -198,10 +198,12 @@ def get_9_patch(x, y, image):
 def get_9_patch_coords(x, y, image):
     im = cv2.copyMakeBorder(image, 4, 4, 4, 4, cv2.BORDER_CONSTANT, value=0)
     patch = np.zeros((9, 9, 3))
+    idx = 0
     for i in range(y - 4, y + 4, 1):
         for j in range(x - 4, x + 4, 1):
             for k in range(3):
-                patch[i][j][k] = (im[i + 4][j + 4][k], (j, i))
+                patch[idx // 9][idx % 9][k] = (im[i + 4][j + 4][k], (j, i))
+            idx += 1
     return patch
 
 
