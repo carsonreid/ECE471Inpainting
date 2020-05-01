@@ -85,6 +85,7 @@ def inpaint(image_file, mask):
             # (b) texture or structure?
             pixels_to_copy = []  # set this to a list of tuples, ((r, g, b), (x, y)),
             for pixel in source_patch_pixels.reshape((9 * 9, 3)):
+                # pixel = source_patch_pixels[4][4]
                 try:
                     pixel_coords = pixel[0][1]
                     lambdaNegative = eigvals[pixel_coords[1]][pixel_coords[0]][0]
@@ -101,6 +102,10 @@ def inpaint(image_file, mask):
                     mask_pixel_coordinates.remove((coords[0], coords[1]))  # remove painted pixel from list of px to paint
 
     # 6. sum inpainted texture image and the structure image
+    cv2.imwrite(os.path.join(__location__, config.output_folder,
+                             image_name + '-inpainted-structure.png'), structure_image)
+    cv2.imwrite(os.path.join(__location__, config.output_folder,
+                             image_name + '-inpainted-texture.png'), texture_image)
     final_image = np.add(texture_image, structure_image)
 
     for i in range(3):
