@@ -1,5 +1,16 @@
 # App Descriptions
 
+## Execution of the Code
+
+After downloading the required dataset (See [readme in images
+folder](images/README.md)), merging the data and exporting the desired images to
+the images folder, execute the data_loader to run the inpainting method on the
+entire images folder.
+
+```bash
+python data_loader
+```
+
 ## [images](images/)
 
 Folder where the images to be inpainted from
