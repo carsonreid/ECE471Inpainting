@@ -186,11 +186,12 @@ def compute_pixel_priorities(structure, texture, mask_im):
 def get_9_patch(x, y, image):
     im = cv2.copyMakeBorder(image, 4, 4, 4, 4, cv2.BORDER_CONSTANT, value=0)
     patch = np.zeros((9, 9, 3))
+    idx = 0
     for i in range(y - 4, y + 4, 1):
         for j in range(x - 4, x + 4, 1):
             for k in range(3):
-                val = im[i + 4][j + 4][k]
-                patch[i][j][k] = val
+                patch[idx/9][idx % 9][k] = im[i + 4][j + 4][k]
+            idx += 1
     return patch
 
 
